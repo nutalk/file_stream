@@ -1,3 +1,5 @@
+import mysql.connector
+
 class Executor(object):
     """
     基础类，定义来源和输出
@@ -38,4 +40,21 @@ class Executor(object):
         return self._source
 
 
+class MysqlExecutor(Executor):
+    def __init__(self, config: dict):
+        """
+        向一个mysql表写入数据。
+        :param config: 数据库配置
+        """
+        super().__init__()
+        self.config = config
+        self.db = None
+        self.cur = None
 
+    def __connect(self, dictionary=True):
+        self.db = mysql.connector.connect(**self.config)
+        self.cur = self.db.cursor(dictionary=dictionary)
+
+    def __disconnect(self):
+        self.cur.close()
+        self.db.close()

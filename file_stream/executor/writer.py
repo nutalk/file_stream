@@ -1,10 +1,14 @@
-from file_stream.executor.executor import Executor
+from file_stream.executor.executor import Executor, MysqlExecutor
 import csv
-import mysql.connector
 
 
 class CsvWriter(Executor):
     def __init__(self, fpath: str, fieldnames: list):
+        """
+        写csv文件。
+        :param fpath: 目标地址。
+        :param fieldnames: 表头组成。
+        """
         super().__init__()
         self.stream = open(fpath, 'w')
         self.writer = csv.DictWriter(self.stream, fieldnames=fieldnames)
@@ -18,22 +22,17 @@ class CsvWriter(Executor):
         self.stream.close()
 
 
-class MysqlWriter(Executor):
+class MysqlWriter(MysqlExecutor):
     def __init__(self, config: dict, table_name: str, buffer=100):
-        super().__init__()
-        self.config = config
-        self.db = None
-        self.cur = None
+        """
+        向一个mysql表写入数据。
+        :param config: 数据库配置
+        :param table_name: 表名称
+        :param buffer: 多少条数据commit一次。
+        """
+        super().__init__(config)
         self.table_name = table_name
         self.buffer = buffer
-
-    def __connect(self):
-        self.db = mysql.connector.connect(**self.config)
-        self.cur = self.db.cursor()
-
-    def __disconnect(self):
-        self.cur.close()
-        self.db.close()
 
     def __output_many(self, items: list):
         assert isinstance(items, list) and len(items)>0, '输入只能是list,且长度大于0。'

@@ -1,6 +1,6 @@
 import os
 import csv
-from file_stream.executor.executor import Executor
+from file_stream.executor.executor import Executor, MysqlExecutor
 
 
 class Dir(Executor):
@@ -94,3 +94,18 @@ class Memory(Executor):
     def __iter__(self):
         for item in self.items:
             yield item
+
+
+class MysqlReader(MysqlExecutor):
+    def __init__(self, config: dict, sql: str):
+        super().__init__(config)
+        self.sql = sql
+
+    def __iter__(self):
+        self.__connect()
+
+        self.cur.execute(self.sql)
+        for item in self.cur:
+            yield item
+
+        self.__disconnect()

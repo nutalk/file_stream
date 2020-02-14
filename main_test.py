@@ -1,6 +1,7 @@
 from file_stream.executor.source import Dir, CsvReader, Memory
 from file_stream.executor.writer import CsvWriter
 from file_stream.executor.writer import MysqlWriter
+from db_config import office_base_config
 
 
 def test_csv():
@@ -29,15 +30,6 @@ def test_csv_write():
     writer = CsvWriter('/home/hetao/Data/p5w/output/output_question.csv', p.fieldnames)
     p = p | writer
     p.output()
-
-
-office_base_config = {
-    'host': "",
-    'user': "",
-    'passwd': '',
-    'database': '',
-    'charset': '',
-}
 
 
 def test_mysql():

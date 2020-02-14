@@ -132,3 +132,6 @@ dmypy.json
 build
 dist
 file_stream.egg-info
+
+db_config.py
+/db_config.py

@@ -16,6 +16,15 @@
 
 ## 使用
 
+### 获取目录下所有文件名称。
+```python
+from file_stream.executor.source import Dir
+
+fdir = Dir('/home/hetao/Data/p5w/tmp2', ['csv'])
+for fpath in fdir:
+    print(fpath)
+```
+
 ### 写数据到数据库。
 
 ```python
