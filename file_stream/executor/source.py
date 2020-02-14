@@ -80,3 +80,17 @@ class CsvReader(Executor):
                 reader = csv.DictReader(f)
                 for row in reader:
                     yield row
+
+
+class Memory(Executor):
+    def __init__(self, items):
+        """
+        从内存产生数据。
+        :param items: 可迭代对象。
+        """
+        super().__init__()
+        self.items = items
+
+    def __iter__(self):
+        for item in self.items:
+            yield item

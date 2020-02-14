@@ -12,8 +12,32 @@
 
 整体思路主要参考了这个项目：https://github.com/sandabuliu/python-stream。
 
-使用
+安装
 ========
 >>> pip install file-stream
-from file-stream.executor.source import CsvReader
-from file-stream.executor.writer import CsvWriter
+
+
+使用
+========
+写数据到数据库。
+
+::
+
+    from file_stream.executor.source import Memory
+    from file_stream.executor.writer import MysqlWriter
+
+    office_base_config = {
+        'host': "",
+        'user': "",
+        'passwd': '',
+        'database': '',
+        'charset': '',
+    }
+
+    datas = [{'f_cuid': 'id2', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0},
+             {'f_cuid': 'id3', 'f_sentence_no': 3, 'f_pos_no': 2, 'f_neg_no': 1, 'f_nu_no': 0},
+             {'f_cuid': 'id1', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0},
+             {'f_cuid': 'id4', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0}, ]
+    reader = Memory(datas)
+    p = reader | MysqlWriter(office_base_config, 't_report_info')
+    p.output()

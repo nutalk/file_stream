@@ -1,5 +1,6 @@
-from file_stream.executor.source import Dir, CsvReader
+from file_stream.executor.source import Dir, CsvReader, Memory
 from file_stream.executor.writer import CsvWriter
+from file_stream.executor.writer import MysqlWriter
 
 
 def test_csv():
@@ -30,5 +31,24 @@ def test_csv_write():
     p.output()
 
 
+office_base_config = {
+    'host': "",
+    'user': "",
+    'passwd': '',
+    'database': '',
+    'charset': '',
+}
+
+
+def test_mysql():
+    datas = [{'f_cuid': 'id2', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0},
+             {'f_cuid': 'id3', 'f_sentence_no': 3, 'f_pos_no': 2, 'f_neg_no': 1, 'f_nu_no': 0},
+             {'f_cuid': 'id1', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0},
+             {'f_cuid': 'id4', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0}, ]
+    reader = Memory(datas)
+    p = reader | MysqlWriter(office_base_config, 't_report_info')
+    p.output()
+
+
 if __name__ == '__main__':
-    test_csv_write()
+    test_mysql()

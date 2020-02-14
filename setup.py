@@ -4,7 +4,7 @@ with open("readme.rst", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 setup(
     name="file_stream",
-    version="0.0.1",
+    version="0.0.3",
     author="Nutalk",
     author_email="ht2005112@hotmail.com",
     description="process data as stream.",
@@ -14,6 +14,7 @@ setup(
     packages=find_packages(),
     long_description=long_description,
     install_requires=[
+        'mysql-connector',
             ],
     classifiers=[
         "Development Status :: 3 - Alpha",
