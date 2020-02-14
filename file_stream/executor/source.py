@@ -98,6 +98,11 @@ class Memory(Executor):
 
 class MysqlReader(MysqlExecutor):
     def __init__(self, config: dict, sql: str):
+        """
+        从mysql读取数据。
+        :param config: 数据库配置。
+        :param sql: sql语句。
+        """
         super().__init__(config)
         self.sql = sql
 

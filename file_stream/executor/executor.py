@@ -1,5 +1,6 @@
 import mysql.connector
 
+
 class Executor(object):
     """
     基础类，定义来源和输出
@@ -25,7 +26,7 @@ class Executor(object):
         return item
 
     def __or__(self, executor):
-        """or操作，将self放到executor的最左边"""
+        """or操作，将self放到executor的最左边，同时返回最右边的executor对象。"""
         source = executor             # type: Executor
         while source._source:
             source = source._source
@@ -43,7 +44,7 @@ class Executor(object):
 class MysqlExecutor(Executor):
     def __init__(self, config: dict):
         """
-        向一个mysql表写入数据。
+        向一个mysql表读取或写入数据的基础类。
         :param config: 数据库配置
         """
         super().__init__()
