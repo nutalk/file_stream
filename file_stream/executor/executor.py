@@ -51,10 +51,10 @@ class MysqlExecutor(Executor):
         self.db = None
         self.cur = None
 
-    def __connect(self, dictionary=True):
+    def _connect(self, dictionary=True):
         self.db = mysql.connector.connect(**self.config)
         self.cur = self.db.cursor(dictionary=dictionary)
 
-    def __disconnect(self):
+    def _disconnect(self):
         self.cur.close()
         self.db.close()

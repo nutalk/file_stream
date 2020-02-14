@@ -47,7 +47,7 @@ class MysqlWriter(MysqlExecutor):
     def output(self):
         if self._source is None:
             raise IOError('未指定来源')
-        self.__connect()
+        self._connect()
 
         tmp_items = []
         for item in self._source:
@@ -58,4 +58,4 @@ class MysqlWriter(MysqlExecutor):
         if len(tmp_items) != 0:
             self.__output_many(tmp_items)
 
-        self.__disconnect()
+        self._disconnect()

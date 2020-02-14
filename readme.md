@@ -1,6 +1,10 @@
 # 流式处理数据
 
-从目录读取所有文件，从csv读取所有数据，对数据计算后，写入csv、数据库等。
+从目录读取所有文件，从csv读取所有数据，从mysql读取数据。
+
+对数据计算后，写入csv、数据库等。
+
+通过`|`将不同的组建连接起来，形成管道。
 
 ## 原理说明
 
@@ -48,3 +52,5 @@ p = reader | MysqlWriter(office_base_config, 't_report_info')
 p.output()
 
 ```
+
+更多范例参见`main_test.py`。

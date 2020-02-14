@@ -102,10 +102,10 @@ class MysqlReader(MysqlExecutor):
         self.sql = sql
 
     def __iter__(self):
-        self.__connect()
+        self._connect()
 
         self.cur.execute(self.sql)
         for item in self.cur:
             yield item
 
-        self.__disconnect()
+        self._disconnect()
