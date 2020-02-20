@@ -1,7 +1,7 @@
-from file_stream.executor.source import Dir, CsvReader, Memory, MysqlReader
-from file_stream.executor.writer import CsvWriter
-from file_stream.executor.writer import MysqlWriter
-
+from file_stream.source import Dir, CsvReader, Memory, MysqlReader
+from file_stream.writer import CsvWriter, ScreenOutput
+from file_stream.writer import MysqlWriter
+from file_stream.filter import Filter
 
 office_base_config = {
     'host': "",
@@ -27,6 +27,15 @@ def test_csv():
     for row in p:
         print(row)
         break
+
+
+def test_filter():
+    """测试过滤器"""
+    reader = CsvReader('/home/hetao/Data/p5w/数据分析/IPO_RoadShow.txt', delimiter='\t', encoding='gbk')
+    fit = Filter(lambda x: True)
+    writer = ScreenOutput(end='\r')
+    p = reader | fit | writer
+    p.output()
 
 
 def test_csv_write():
@@ -58,5 +67,4 @@ def test_mysql_read():
 
 
 if __name__ == '__main__':
-    # test_mysql_read()
-    test_csv()
+    test_filter()

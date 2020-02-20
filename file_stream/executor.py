@@ -19,7 +19,7 @@ class Executor(object):
 
     def handle(self, item):
         """
-        对蜀山进行处理，其他类要重写这个方法。
+        对输出进行处理，返回值或者None。
         :param item:
         :return:
         """

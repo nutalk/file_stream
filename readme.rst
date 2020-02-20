@@ -4,6 +4,8 @@
 
 从目录读取所有文件，从csv读取所有数据，从mysql读取数据。
 
+对数据按多个函数的组合进行过滤。
+
 对数据计算后，写入csv、数据库等。
 
 通过|将不同的组建连接起来，形成管道。
@@ -29,8 +31,8 @@
 
 ::
 
-    from file_stream.executor.source import Memory
-    from file_stream.executor.writer import MysqlWriter
+    from file_stream.source import Memory
+    from file_stream.writer import MysqlWriter
 
     office_base_config = {
         'host': "",
@@ -46,6 +48,16 @@
              {'f_cuid': 'id4', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0}, ]
     reader = Memory(datas)
     p = reader | MysqlWriter(office_base_config, 't_report_info')
+    p.output()
+
+从CSV文件读取数据，按条件筛选后输出到屏幕。
+
+::
+
+    reader = CsvReader('/home/hetao/Data/p5w/数据分析/IPO_RoadShow.txt', delimiter='\t', encoding='gbk')
+    fit = Filter(lambda x: True)
+    writer = ScreenOutput(end='\r')
+    p = reader | fit | writer
     p.output()
 
 更多范例参见`main_test.py`。

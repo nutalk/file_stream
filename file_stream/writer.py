@@ -1,4 +1,4 @@
-from file_stream.executor.executor import Executor, MysqlExecutor
+from file_stream.executor import Executor, MysqlExecutor
 import csv
 
 
@@ -60,3 +60,17 @@ class MysqlWriter(MysqlExecutor):
             self.__output_many(tmp_items)
 
         self._disconnect()
+
+
+class ScreenOutput(Executor):
+    def __init__(self, end='\n'):
+        """在屏幕打印出输出结果。"""
+        super().__init__()
+        self.end = end
+
+    def output(self):
+        if self._source is None:
+            raise IOError('未指定来源')
+
+        for item in self._source:
+            print(item, end=self.end)

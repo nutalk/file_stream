@@ -1,6 +1,6 @@
 import os
 import csv
-from file_stream.executor.executor import Executor, MysqlExecutor
+from file_stream.executor import Executor, MysqlExecutor
 
 
 class Dir(Executor):
