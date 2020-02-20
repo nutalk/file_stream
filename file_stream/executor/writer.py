@@ -3,15 +3,16 @@ import csv
 
 
 class CsvWriter(Executor):
-    def __init__(self, fpath: str, fieldnames: list):
+    def __init__(self, fpath: str, fieldnames: list, **kwargs):
         """
         写csv文件。
         :param fpath: 目标地址。
         :param fieldnames: 表头组成。
+        :param delimiter: 分隔符。
         """
         super().__init__()
         self.stream = open(fpath, 'w')
-        self.writer = csv.DictWriter(self.stream, fieldnames=fieldnames)
+        self.writer = csv.DictWriter(self.stream, fieldnames=fieldnames, delimiter=kwargs.get('delimiter', ','))
         self.writer.writeheader()
 
     def output(self):

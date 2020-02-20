@@ -40,13 +40,17 @@ class Dir(Executor):
 
 
 class CsvReader(Executor):
-    def __init__(self, path=None):
+    def __init__(self, path=None, **kwargs):
         """
-        csv文件阅读
-        :param path: csv文件地址。
+        从csv读取数据。
+        :param dir: 目录地址。
+        :param delimiter: 分隔符。
+        :param encoding: 文件编码。
         """
         super().__init__()
         self.path = path
+        self.delimiter = kwargs.get('delimiter', ',')
+        self.encoding = kwargs.get('encoding', 'utf8')
 
     def test_source(self):
         if self._source is None and self.path is None:
@@ -71,13 +75,13 @@ class CsvReader(Executor):
         self.test_source()
         if self._source is not None:
             for fpath in self._source:
-                with open(fpath, 'r') as f:
-                    reader = csv.DictReader(f)
+                with open(fpath, 'r', encoding=self.encoding) as f:
+                    reader = csv.DictReader(f, delimiter=self.delimiter)
                     for row in reader:
                         yield row
         if self.path is not None:
-            with open(self.path, 'r') as f:
-                reader = csv.DictReader(f)
+            with open(self.path, 'r', encoding=self.encoding) as f:
+                reader = csv.DictReader(f, delimiter=self.delimiter)
                 for row in reader:
                     yield row
 

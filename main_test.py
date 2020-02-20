@@ -1,7 +1,15 @@
 from file_stream.executor.source import Dir, CsvReader, Memory, MysqlReader
 from file_stream.executor.writer import CsvWriter
 from file_stream.executor.writer import MysqlWriter
-from db_config import office_base_config
+
+
+office_base_config = {
+    'host': "",
+    'user': "",
+    'passwd': '',
+    'database': '',
+    'charset': 'utf8',
+}
 
 
 def test_csv():
@@ -9,7 +17,7 @@ def test_csv():
     从文件读取，从目录读取所有文件迭代输出。
     :return:
     """
-    reader = CsvReader('/home/hetao/Data/p5w/output/output_roadshow.csv')
+    reader = CsvReader('/home/hetao/Data/p5w/数据分析/IPO_RoadShow.txt', delimiter='\t', encoding='gbk')
     for row in reader:
         print(row)
         break
@@ -50,4 +58,5 @@ def test_mysql_read():
 
 
 if __name__ == '__main__':
-    test_mysql_read()
+    # test_mysql_read()
+    test_csv()
