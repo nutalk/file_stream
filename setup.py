@@ -4,7 +4,7 @@ with open("readme.rst", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 setup(
     name="file_stream",
-    version="0.0.6",
+    version="0.0.7",
     author="Nutalk",
     author_email="ht2005112@hotmail.com",
     description="process data as stream.",
