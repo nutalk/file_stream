@@ -52,3 +52,19 @@ class DuplicateRemove(Executor):
                 handler = tuple([item[field] for field in self.tell_fields])
                 self.exists.add(handler)
                 yield result
+
+
+class FieldTrans(Executor):
+    def __init__(self, trans_dict: dict):
+        """
+        列名称转换。
+        :param trans_dict: 列名称转换字典，key为来源处的列名称，value为转换后输出的列名称。
+        """
+        super().__init__()
+        self.trans_dict = trans_dict
+
+    def handle(self, item):
+        out_row = {}
+        for source_key, output_key in self.trans_dict.items():
+            out_row[output_key] = item[source_key]
+            yield out_row
