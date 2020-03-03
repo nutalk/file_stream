@@ -67,4 +67,4 @@ class FieldTrans(Executor):
         out_row = {}
         for source_key, output_key in self.trans_dict.items():
             out_row[output_key] = item[source_key]
-            yield out_row
+        return out_row
