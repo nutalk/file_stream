@@ -22,6 +22,10 @@ class CsvWriter(Executor):
             self.writer.writerow(item)
         self.stream.close()
 
+    def writerow(self, row: dict):
+        assert isinstance(row, dict), '输入必须是字典。'
+        self.writer.writerow(row)
+
 
 class MysqlWriter(MysqlExecutor):
     def __init__(self, config: dict, table_name: str, buffer=100):
@@ -36,7 +40,7 @@ class MysqlWriter(MysqlExecutor):
         self.buffer = buffer
 
     def __output_many(self, items: list):
-        assert isinstance(items, list) and len(items)>0, '输入只能是list,且长度大于0。'
+        assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
         assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
         field_names = ', '.join(items[0].keys())
         field_values = ')s, %('.join(items[0].keys())
@@ -61,6 +65,12 @@ class MysqlWriter(MysqlExecutor):
 
         self._disconnect()
 
+    def writerow(self, row: dict):
+        tmp_items = [row]
+        self._connect()
+        self.__output_many(tmp_items)
+        self._disconnect()
+
 
 class ScreenOutput(Executor):
     def __init__(self, end='\n'):
@@ -74,3 +84,6 @@ class ScreenOutput(Executor):
 
         for item in self._source:
             print(item, end=self.end)
+
+    def writerow(self, row: dict):
+        print(row, end=self.end)
