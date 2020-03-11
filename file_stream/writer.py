@@ -1,6 +1,7 @@
 from file_stream.executor import Executor, MysqlExecutor
 import csv
 import logging
+import copy
 
 
 class CsvWriter(Executor):
@@ -48,7 +49,6 @@ class MysqlWriter(MysqlExecutor):
         sql = 'insert into {} ({}) values (%({})s)'.format(self.table_name, field_names, field_values)
         for item in items:
             self.cur.execute(sql, item)
-            logging.debug('sql insert with {}'.format(item))
         self.db.commit()
         logging.debug('sql commit')
 
@@ -59,9 +59,8 @@ class MysqlWriter(MysqlExecutor):
 
         tmp_items = []
         for item in self._source:
-            tmp_items.append(item)
+            tmp_items.append(copy.deepcopy(item))
             if len(tmp_items) >= self.buffer:
-                logging.debug('sending items to sql.')
                 self.__output_many(tmp_items)
                 tmp_items = []
         if len(tmp_items) != 0:
