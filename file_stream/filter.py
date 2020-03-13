@@ -45,6 +45,7 @@ class DuplicateRemove(Executor):
     def handle(self, item):
         handler = tuple([item[field].replace('\n', '') for field in self.tell_fields])
         if handler in self.exists:
+            logging.debug('find duplicate data, {}.'.format(item))
             return None
         else:
             return item
@@ -59,18 +60,24 @@ class DuplicateRemove(Executor):
 
 
 class FieldTrans(Executor):
-    def __init__(self, trans_dict: dict):
+    def __init__(self, trans_dict: dict, keep_miss_key: bool = False):
         """
         列名称转换。
         :param trans_dict: 列名称转换字典，key为来源处的列名称，value为转换后输出的列名称。
+        :param keep_miss_key: 是否包括trans_dict中未包含的字段.
         """
         super().__init__()
         self.trans_dict = trans_dict
+        self.keep_miss_key = keep_miss_key
 
     def handle(self, item):
         out_row = {}
+        if self.keep_miss_key:
+            out_row.update(item)
         for source_key, output_key in self.trans_dict.items():
             out_row[output_key] = item[source_key]
+            if self.keep_miss_key:
+                out_row.pop(source_key)
         return out_row
 
 
@@ -93,7 +100,6 @@ class Inspector(UserDict):
 
 
 def default_correction(*args, **kwargs):
-    logging.debug('trying to correct the data.')
     raise ValueError('DataQC quality control fail')
 
 
