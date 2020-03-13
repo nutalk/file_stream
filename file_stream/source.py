@@ -60,6 +60,7 @@ class CsvReader(Executor):
 
     @property
     def fieldnames(self):
+        # TODO 优化来源测试，既能避免未指定来源，又能避免每次迭代都测试，以提高速度。
         self.test_source()
         if self._source is not None:
             for fpath in self._source:
@@ -118,3 +119,28 @@ class MysqlReader(MysqlExecutor):
             yield item
 
         self._disconnect()
+
+
+class LineReader(Executor):
+    def __init__(self, fpath, **kwargs):
+        super().__init__()
+        self.path = fpath
+        self.encoding = kwargs.get('encoding', 'utf8')
+
+    def test_source(self):
+        if self._source is None and self.path is None:
+            raise IOError('未指定读取来源')
+        if self._source is not None and self.path is not None:
+            raise IOError('来源重复，请检查')
+
+    def __iter__(self):
+        self.test_source()
+        if self._source is not None:
+            for fpath in self._source:
+                with open(fpath, 'r', encoding=self.encoding) as f:
+                    for row in f:
+                        yield row
+        if self.path is not None:
+            with open(self.path, 'r', encoding=self.encoding) as f:
+                for row in f:
+                    yield row
