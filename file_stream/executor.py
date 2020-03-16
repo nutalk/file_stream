@@ -1,4 +1,5 @@
 import mysql.connector
+from retry import retry
 
 
 class Executor(object):
@@ -52,10 +53,12 @@ class MysqlExecutor(Executor):
         self.db = None
         self.cur = None
 
+    @retry(tries=3, delay=1)
     def _connect(self, dictionary=True):
         self.db = mysql.connector.connect(**self.config)
         self.cur = self.db.cursor(dictionary=dictionary)
 
+    @retry(tries=3, delay=1)
     def _disconnect(self):
         self.cur.close()
         self.db.close()

@@ -1,8 +1,8 @@
 from file_stream.executor import Executor
-from file_stream.logic import ExprFunc, And, Or
-from collections import UserDict
+from file_stream.logic import ExprFunc, And, Or, FullOut
+from collections import defaultdict
 import logging
-from typing import Dict, Callable
+from typing import Callable
 from inspect import isfunction
 
 
@@ -81,66 +81,53 @@ class FieldTrans(Executor):
         return out_row
 
 
-class Inspector(UserDict):
-    def __init__(self, *funcs, mix='and', corrective_action: Callable = None):
-        """
-        数据检查
-        :param funcs: 数据点检查函数列表
-        :param mix: 函数组合方式
-        :param corrective_action: 修正函数
-        """
-        assert mix in ['and', 'or'], "mix 参数只能是 'and', 'or'。"
-        if corrective_action is not None:
-            assert isfunction(corrective_action), 'corrective_action 应该是一个函数。'
-
-        super().__init__()
-        self['functions'] = funcs
-        self['mix'] = mix
-        self['corrective_action'] = corrective_action
-
-
-def default_correction(*args, **kwargs):
-    raise ValueError('DataQC quality control fail')
+def default_action(item):
+    raise ValueError('遇到错误数据. {}'.format(item))
 
 
 class DataQC(Executor):
-    def __init__(self, inspect_dict: Dict[str, Inspector], default_correction_function=None):
+    def __init__(self, *args, corrective_action: Callable = None, **kwargs):
         """
-        数据质量控制，按照规则对指定列的数据进行检查，并执行纠正措施。
-        :param inspect_dict: {field_name：Inspector}组成的字典。
+        数据质量检查.
+        :param args: 判断函数.
+        :param corrective_action: 遇到错误的修复措施.
+        :param kwargs: mix: [and | or]
         """
         super().__init__()
-        self.inspect_dict = {}  # 列名称：检查方式
-        self.corrective_action = {}  # 纠正措施
+        mix = kwargs.get('mix', 'and')
+        assert mix in ['and', 'or'], "mix 参数只能是 'and', 'or'。"
+        self.mix = mix
 
-        # 设置纠错方式
-        if default_correction_function is None:
-            self.default_correction_function = default_correction
+        if corrective_action is not None:
+            assert isfunction(corrective_action), '请输入一个函数.'
+            self.corrective_action = corrective_action
         else:
-            self.default_correction_function = default_correction_function
+            self.corrective_action = default_action
 
-        # 设置检查方式
-        for key, inspect in inspect_dict.items():
-            if inspect.get('mix', 'and') == 'and':
-                self.inspect_dict[key] = And(*inspect['functions'])
-            else:
-                self.inspect_dict[key] = Or(*inspect['functions'])
-            if inspect.get('corrective_action') is None:
-                self.corrective_action[key] = self.default_correction_function
-            else:
-                self.corrective_action[key] = inspect.get('corrective_action')
+        self.correct_record_no = defaultdict(int)
+        self.total_record_no = 0
+        self.filter = FullOut(*args)
 
     def handle(self, item):
-        for key, expr in self.inspect_dict.items():
-            if expr.result(item[key]):
-                logging.debug('qc pass, key: {}, value: {}'.format(key, item[key]))
-                # 如果通过检查
-                continue
-            else:
-                # 如未通过检查
-                logging.debug('qc fail, key: {}, value: {}, value_type {}'.format(key, item[key], type(item[key])))
-                item[key] = self.corrective_action[key](item[key])
-        return item
+        result = self.filter.result(item)
+        for idx, tell in enumerate(result):
+            if tell:
+                self.correct_record_no[idx] += 1
+        self.total_record_no += 1
+
+        if self.mix == 'and':
+            single_result = all(result)
+        else:
+            single_result = any(result)
+
+        if single_result:
+            return item
+        else:
+            return self.corrective_action(item)
+
+    @property
+    def report(self):
+        return {'total_items': self.total_record_no, 'correct_record': self.correct_record_no}
 
 
 class NoneFiller(Executor):

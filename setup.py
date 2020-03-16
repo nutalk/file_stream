@@ -14,7 +14,8 @@ setup(
     packages=find_packages(),
     long_description=long_description,
     install_requires=[
-        'mysql-connector',
+        'mysql-connector-python>=8.0.19',
+        'retry>=0.9.2'
             ],
     classifiers=[
         "Development Status :: 3 - Alpha",

@@ -22,7 +22,7 @@ class ExprFunc(object):
 class ExprMix(object):
     def __init__(self, name: str,  *args):
         """
-        将判断器进行祖上额。
+        将判断器进行组装。
         :param name: 名称，由于字符串打印实例信息。
         :param args: 判断器或者函数组成的列表。
         """
@@ -55,6 +55,17 @@ class Or(ExprMix):
 
     def result(self, data):
         return any([v.result(data) for v in self.args])
+
+
+class FullOut(ExprMix):
+    """
+    输出所有函数的判断结果.
+    """
+    def __init__(self, *args):
+        super().__init__(' full', *args)
+
+    def result(self, data):
+        return [v.result(data) for v in self.args]
 
 
 if __name__ == '__main__':
