@@ -4,11 +4,11 @@ from file_stream.executor import Executor, MysqlExecutor
 
 
 class Dir(Executor):
-    def __init__(self, dir: str, allowed_suffix: list):
+    def __init__(self, dir: str, allowed_suffix: list = None):
         """
         获取目录下的所有文件的绝对地址。
         :param dir: 目录地址。
-        :param allowed_suffix: 允许的后缀，不包括点。
+        :param allowed_suffix: 允许的后缀，None的情况下返回全部。
         """
         super().__init__()
         self.dir = dir
