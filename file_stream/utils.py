@@ -2,6 +2,9 @@ import re
 import math
 from typing import List
 
+DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
+DATE_FMT = '%Y-%m-%d'
+
 
 def split_sentence(sentence) -> list:
     """
