@@ -77,6 +77,14 @@ class MysqlWriter(MysqlExecutor):
 
 class MysqlUpdateWriter(MysqlExecutor):
     def __init__(self, config: dict, table_name: str, primary_keys: list, buffer=100, write_fail=True):
+        """
+        更新数据库字段。
+        :param config: 数据库配置文件
+        :param table_name: 表名称
+        :param primary_keys: 唯一值
+        :param buffer: 缓存多少才commit
+        :param write_fail: 更新失败的是否写到数据库里。
+        """
         super().__init__(config)
         self.table_name = table_name
         self.buffer = buffer
