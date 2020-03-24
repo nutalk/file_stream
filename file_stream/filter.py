@@ -31,18 +31,20 @@ class Filter(Executor):
 
 
 class FinishedRemove(Executor):
-    def __init__(self, target: Executor, target_fields: list, source_fields: list = None):
+    def __init__(self, target: Executor, target_fields: list, source_fields: list = None, trans_str=True):
         """
         去除已经完成的内热.
         :param target: Executor, 迭代器即可.最终的输出目标,从这个目标读取已经完成的内容.
         :param target_fields: 最终输出列,将这些列组成tuple,用于判断是否完成.
         :param source_fields: 来源列,与最终输出进行对比的列,用于判断是否已经完成.若未指定则认为与target_fields相同.
+        :param trans_str: 是否统一转换成str。
         """
 
         super().__init__()
         self.exists = set()
         self.target = target
         self.target_fields = target_fields
+        self.trans_str = trans_str
         if source_fields is not None:
             self.source_fields = source_fields
         else:
@@ -51,15 +53,23 @@ class FinishedRemove(Executor):
 
     def _get_finished(self):
         for row in self.target:
-            handler = tuple([row[field] for field in self.target_fields])
+            if self.trans_str:
+                handler = tuple([str(row[field]) for field in self.target_fields])
+            else:
+                handler = tuple([row[field] for field in self.target_fields])
             self.exists.add(handler)
 
     def handle(self, item):
-        handler = tuple([item[field] for field in self.source_fields])
+        if self.trans_str:
+            handler = tuple([str(item[field]) for field in self.source_fields])
+        else:
+            handler = tuple([item[field] for field in self.source_fields])
+
         if handler in self.exists:
             logging.debug('pass data, {}.'.format(item))
             return None
         else:
+            logging.debug('dealing with, {}.'.format(item))
             return item
 
 
@@ -116,6 +126,14 @@ class FieldTrans(Executor):
 
 def default_action(item):
     raise ValueError('遇到错误数据. {}'.format(item))
+
+
+def inspect_null(item):
+    for key, value in item.items():
+        if value == '' or value is None:
+            logging.debug('data qc: 遇到空值: {}: {}.'.format(key, value))
+            return False
+    return True
 
 
 class DataQC(Executor):

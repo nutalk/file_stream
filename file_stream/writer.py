@@ -41,7 +41,7 @@ class MysqlWriter(MysqlExecutor):
         self.table_name = table_name
         self.buffer = buffer
 
-    def __output_many(self, items: list):
+    def _output_many(self, items: list):
         assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
         assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
         field_names = ', '.join(items[0].keys())
@@ -61,17 +61,70 @@ class MysqlWriter(MysqlExecutor):
         for item in self._source:
             tmp_items.append(copy.deepcopy(item))
             if len(tmp_items) >= self.buffer:
-                self.__output_many(tmp_items)
+                self._output_many(tmp_items)
                 tmp_items = []
         if len(tmp_items) != 0:
-            self.__output_many(tmp_items)
+            self._output_many(tmp_items)
 
         self._disconnect()
 
     def writerow(self, row: dict):
         tmp_items = [row]
         self._connect()
-        self.__output_many(tmp_items)
+        self._output_many(tmp_items)
+        self._disconnect()
+
+
+class MysqlUpdateWriter(MysqlExecutor):
+    def __init__(self, config: dict, table_name: str, primary_keys: list, buffer=100, write_fail=True):
+        super().__init__(config)
+        self.table_name = table_name
+        self.buffer = buffer
+        self.primary_keys = primary_keys
+        self.write_fail = write_fail
+
+    def _output_many(self, items: list):
+        assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
+        assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
+        field_names = ', '.join(items[0].keys())
+        field_values = ')s, %('.join(items[0].keys())
+        sql = 'insert into {} ({}) values (%({})s)'.format(self.table_name, field_names, field_values)
+        for item in items:
+            self.cur.execute(sql, item)
+        self.db.commit()
+
+    def _update_many(self, items: list):
+        assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
+        assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
+        assert set(self.primary_keys).issubset(items[0].keys()), '{}中未包括所有主键{}'.format(items[0].keys(), self.primary_keys)
+        set_str = ' , '.join(['{} = %({})s'.format(inf, inf) for inf in items[0].keys() - set(self.primary_keys)])
+        where_str = ' AND '.join(['{} = %({})s'.format(inf, inf) for inf in self.primary_keys])
+        sql = 'UPDATE {} SET {}  WHERE {}'.format(self.table_name, set_str, where_str)
+        miss_update = []
+        for item in items:
+            results = self.cur.execute(sql, item, multi=True)
+            result = next(results)
+            logging.debug("Number of rows affected by statement '{}': {}".format(result.statement, result.rowcount))
+            if result.rowcount == 0:
+                miss_update.append(item)
+        self.db.commit()
+        if self.write_fail and len(miss_update) > 0:
+            self._output_many(miss_update)
+
+    def output(self):
+        if self._source is None:
+            raise IOError('未指定来源')
+        self._connect()
+
+        tmp_items = []
+        for item in self._source:
+            tmp_items.append(copy.deepcopy(item))
+            if len(tmp_items) >= self.buffer:
+                self._update_many(tmp_items)
+                tmp_items = []
+        if len(tmp_items) != 0:
+            self._update_many(tmp_items)
+
         self._disconnect()
 
 

@@ -14,7 +14,7 @@ import sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
-from file_stream.writer import MysqlWriter
+from file_stream.writer import MysqlWriter, MysqlUpdateWriter
 from file_stream.source import Memory, CsvReader, Dir
 from file_stream.executor import Executor
 
@@ -51,7 +51,15 @@ def test_csv_mysql():
     p.output()
 
 
+def test_csv_update_mysql():
+    data = [{'f_keyword': '曹彬', 'f_date': '2019-10-01', 'f_area': '澳门', 'f_index': '11'}]
+    reader = Memory(data)
+    p = reader | MysqlUpdateWriter(office_base_config, 'bsvi_google', ['f_keyword', 'f_date', 'f_area'])
+    p.output()
+
+
 if __name__ == '__main__':
     logging.basicConfig(format="%(asctime)s %(name)s:%(levelname)s:%(message)s",
                         datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
-    test_csv_mysql()
+    test_csv_update_mysql()
+    # test_csv_mysql()
