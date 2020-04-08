@@ -31,13 +31,14 @@ class Filter(Executor):
 
 
 class FinishedRemove(Executor):
-    def __init__(self, target: Executor, target_fields: list, source_fields: list = None, trans_str=True):
+    def __init__(self, target: Executor, target_fields: list, source_fields: list = None, trans_str=True, stop_till: int=0):
         """
         去除已经完成的内热.
         :param target: Executor, 迭代器即可.最终的输出目标,从这个目标读取已经完成的内容.
         :param target_fields: 最终输出列,将这些列组成tuple,用于判断是否完成.
         :param source_fields: 来源列,与最终输出进行对比的列,用于判断是否已经完成.若未指定则认为与target_fields相同.
         :param trans_str: 是否统一转换成str。
+        :param stop_till: 多少重复的之后停止。
         """
 
         super().__init__()
@@ -45,6 +46,8 @@ class FinishedRemove(Executor):
         self.target = target
         self.target_fields = target_fields
         self.trans_str = trans_str
+        self.stop_till = stop_till
+        self.finished = 0
         if source_fields is not None:
             self.source_fields = source_fields
         else:
@@ -59,6 +62,14 @@ class FinishedRemove(Executor):
                 handler = tuple([row[field] for field in self.target_fields])
             self.exists.add(handler)
 
+    def __iter__(self):
+        for item in self._source:
+            result = self.handle(item)
+            if self.stop_till != 0 and self.finished >= self.stop_till:
+                break
+            if result is not None:
+                yield result
+
     def handle(self, item):
         if self.trans_str:
             handler = tuple([str(item[field]) for field in self.source_fields])
@@ -67,6 +78,7 @@ class FinishedRemove(Executor):
 
         if handler in self.exists:
             logging.debug('pass data, {}.'.format(item))
+            self.finished += 1
             return None
         else:
             logging.debug('dealing with, {}.'.format(item))

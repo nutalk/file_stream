@@ -2,6 +2,7 @@ from file_stream.executor import Executor, MysqlExecutor
 import csv
 import logging
 import copy
+from typing import List
 
 
 class CsvWriter(Executor):
@@ -42,6 +43,7 @@ class MysqlWriter(MysqlExecutor):
         self.buffer = buffer
 
     def _output_many(self, items: list):
+        # TODO 检查不同行的数据key的数量是否一致，不一致应该给出提醒。logging.warning.
         assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
         assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
         field_names = ', '.join(items[0].keys())
@@ -68,15 +70,14 @@ class MysqlWriter(MysqlExecutor):
 
         self._disconnect()
 
-    def writerow(self, row: dict):
-        tmp_items = [row]
+    def writerows(self, rows: List[dict]):
         self._connect()
-        self._output_many(tmp_items)
+        self._output_many(rows)
         self._disconnect()
 
 
 class MysqlUpdateWriter(MysqlExecutor):
-    def __init__(self, config: dict, table_name: str, primary_keys: list, buffer=100, write_fail=True):
+    def __init__(self, config: dict, table_name: str, primary_keys: list, buffer=100, write_fail=False):
         """
         更新数据库字段。
         :param config: 数据库配置文件
