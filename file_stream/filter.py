@@ -33,6 +33,7 @@ class Filter(Executor):
 class FinishedRemove(Executor):
     def __init__(self, target: Executor, target_fields: list, source_fields: list = None, trans_str=True, stop_till: int=0):
         """
+        TODO logging是否有简单的办法控制等级传递进来。
         去除已经完成的内热.
         :param target: Executor, 迭代器即可.最终的输出目标,从这个目标读取已经完成的内容.
         :param target_fields: 最终输出列,将这些列组成tuple,用于判断是否完成.
