@@ -1,5 +1,7 @@
+
 import mysql.connector
 from retry import retry
+import logging
 
 
 class Executor(object):
@@ -10,6 +12,10 @@ class Executor(object):
         self.name = name or ('%s-%s' % (self.__class__.__name__, id(self)))
         self._source = None
         self._output = None
+        if kwargs.get('logger') is not None:
+            self.logger = kwargs.get('logger')
+        else:
+            self.logger = logging.getLogger(__name__)
         self.kwargs = kwargs
 
     def __iter__(self):

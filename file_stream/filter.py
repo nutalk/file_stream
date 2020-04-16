@@ -31,9 +31,8 @@ class Filter(Executor):
 
 
 class FinishedRemove(Executor):
-    def __init__(self, target: Executor, target_fields: list, source_fields: list = None, trans_str=True, stop_till: int=0):
+    def __init__(self, target: Executor, target_fields: list, source_fields: list = None, trans_str=True, stop_till: int=0, **kwargs):
         """
-        TODO logging是否有简单的办法控制等级传递进来。
         去除已经完成的内热.
         :param target: Executor, 迭代器即可.最终的输出目标,从这个目标读取已经完成的内容.
         :param target_fields: 最终输出列,将这些列组成tuple,用于判断是否完成.
@@ -42,7 +41,7 @@ class FinishedRemove(Executor):
         :param stop_till: 多少重复的之后停止。
         """
 
-        super().__init__()
+        super().__init__(**kwargs)
         self.exists = set()
         self.target = target
         self.target_fields = target_fields
@@ -78,30 +77,30 @@ class FinishedRemove(Executor):
             handler = tuple([item[field] for field in self.source_fields])
 
         if handler in self.exists:
-            logging.debug('pass data, {}.'.format(item))
+            self.logger.debug('pass data, {}.'.format(item))
             self.finished += 1
             return None
         else:
-            logging.debug('dealing with, {}.'.format(item))
+            self.logger.debug('dealing with, {}.'.format(item))
             return item
 
 
 class DuplicateRemove(Executor):
-    def __init__(self, tell_fields: list):
+    def __init__(self, tell_fields: list, **kwargs):
         """
         删除重复内容。
         :param tell_fields: 用来对比是否重复的列名称组成的列表。
 
           remover = DuplicateRemove(['f_company_code', 'f_question'])
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.tell_fields = tell_fields
         self.exists = set()
 
     def handle(self, item):
         handler = tuple([item[field].replace('\n', '') for field in self.tell_fields])
         if handler in self.exists:
-            logging.debug('find duplicate data, {}.'.format(item))
+            self.logger.debug('find duplicate data, {}.'.format(item))
             return None
         else:
             return item
