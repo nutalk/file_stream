@@ -46,6 +46,9 @@ class MysqlWriter(MysqlExecutor):
         # TODO 检查不同行的数据key的数量是否一致，不一致应该给出提醒。logging.warning.
         assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
         assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
+        item_lengs = set([len(item.keys()) for item in items])
+        if len(item_lengs) > 1:
+            self.logger.warning('注意，输入的字典长度不一致。')
         field_names = ', '.join(items[0].keys())
         field_values = ')s, %('.join(items[0].keys())
         sql = 'insert into {} ({}) values (%({})s)'.format(self.table_name, field_names, field_values)
@@ -74,6 +77,10 @@ class MysqlWriter(MysqlExecutor):
         self._connect()
         self._output_many(rows)
         self._disconnect()
+
+    def output_many(self, rows: List[dict]):
+        assert self.db is not None, '请先初始化数据库链接。'
+        self._output_many(rows)
 
 
 class MysqlUpdateWriter(MysqlExecutor):

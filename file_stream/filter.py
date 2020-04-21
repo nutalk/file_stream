@@ -1,9 +1,9 @@
 from file_stream.executor import Executor
 from file_stream.logic import ExprFunc, And, Or, FullOut
 from collections import defaultdict
-import logging
 from typing import Callable
 from inspect import isfunction
+import logging
 
 
 class Filter(Executor):
@@ -66,6 +66,7 @@ class FinishedRemove(Executor):
         for item in self._source:
             result = self.handle(item)
             if self.stop_till != 0 and self.finished >= self.stop_till:
+                self.logger.info('遇到{}次已完成的记录，代码退出。'.format(self.finished))
                 break
             if result is not None:
                 yield result

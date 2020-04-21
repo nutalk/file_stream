@@ -64,7 +64,13 @@ class MysqlExecutor(Executor):
         self.db = mysql.connector.connect(**self.config)
         self.cur = self.db.cursor(dictionary=dictionary)
 
+    def connect(self, dictionary=True):
+        self._connect(dictionary)
+
     @retry(tries=3, delay=1)
     def _disconnect(self):
         self.cur.close()
         self.db.close()
+
+    def disconnect(self):
+        self._disconnect()
