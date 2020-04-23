@@ -1,7 +1,20 @@
+import os
+import sys
+
+
+parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(parent_dir)
+
+
 from file_stream.source import Dir, CsvReader, Memory, MysqlReader
 from file_stream.writer import CsvWriter, ScreenOutput
 from file_stream.writer import MysqlWriter
 from file_stream.filter import Filter
+
+
+
+
+from confg import office_main_config
 
 office_base_config = {
     'host': "",
@@ -50,12 +63,12 @@ def test_csv_write():
 
 
 def test_mysql_write():
-    datas = [{'f_name': 'tom'},
-             {'f_name': 'tim'},
+    datas = [{'f_name': 'tom', 'age':12},
+             {'f_name': 'tim', 'age':34},
              {'f_name': 'jim'},
-             {'f_name': 'pim'}, ]
+             {'f_name': 'pim'}]
     reader = Memory(datas)
-    p = reader | MysqlWriter(office_base_config, 't_table')
+    p = reader | MysqlWriter(office_main_config, 'test_table')
     p.output()
 
 
@@ -67,4 +80,4 @@ def test_mysql_read():
 
 
 if __name__ == '__main__':
-    test_filter()
+    test_mysql_write()

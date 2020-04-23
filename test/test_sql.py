@@ -14,12 +14,12 @@ import sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
-from file_stream.writer import MysqlWriter, MysqlUpdateWriter
-from file_stream.source import Memory, CsvReader, Dir
+from file_stream.writer import MysqlWriter, MysqlUpdateWriter, CsvWriter, MysqlDel
+from file_stream.source import Memory, CsvReader, Dir, MysqlReader
 from file_stream.executor import Executor
 
 import logging
-from confg import office_base_config
+from confg import office_base_config, yun_base_config, office_main_config
 
 
 class GoogleTrendTrans(Executor):
@@ -58,8 +58,28 @@ def test_csv_update_mysql():
     p.output()
 
 
+def test_mysql_csv():
+    yun_base_config['database'] = 'datago_shenzhen'
+    reader = MysqlReader(yun_base_config, "select qn_id_plat, platform, stock_id, qn_time from investor_question_info where qn_time < '2020-01-01';")
+    files = {}
+    for platform in ['sseinfo', 'cninfo', 'panorama']:
+        files[platform] = CsvWriter('/home/hetao/Data/interaction/output/{}.csv'.format(platform),
+                                    ['qn_id_plat', 'platform', 'stock_id', 'qn_time'])
+    for row in reader:
+        files[row['platform']].writerow(row)
+
+
+def test_mysql_delete():
+    deler = MysqlDel(office_main_config, 'test_table', ['f_name'])
+    datas = [{'f_name': 'tom'},
+             {'f_name': 'tim'},
+             {'f_name': 'jim'},
+             {'f_name': 'pim'}]
+    pipe = Memory(datas) | deler
+    pipe.output()
+
+
 if __name__ == '__main__':
     logging.basicConfig(format="%(asctime)s %(name)s:%(levelname)s:%(message)s",
                         datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
-    test_csv_update_mysql()
-    # test_csv_mysql()
+    test_mysql_delete()

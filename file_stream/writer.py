@@ -43,19 +43,18 @@ class MysqlWriter(MysqlExecutor):
         self.buffer = buffer
 
     def _output_many(self, items: list):
-        # TODO 检查不同行的数据key的数量是否一致，不一致应该给出提醒。logging.warning.
         assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
         assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
         item_lengs = set([len(item.keys()) for item in items])
         if len(item_lengs) > 1:
             self.logger.warning('注意，输入的字典长度不一致。')
-        field_names = ', '.join(items[0].keys())
-        field_values = ')s, %('.join(items[0].keys())
-        sql = 'insert into {} ({}) values (%({})s)'.format(self.table_name, field_names, field_values)
         for item in items:
+            field_names = ', '.join(item.keys())
+            field_values = ')s, %('.join(item.keys())
+            sql = 'insert into {} ({}) values (%({})s)'.format(self.table_name, field_names, field_values)
             self.cur.execute(sql, item)
         self.db.commit()
-        logging.debug('sql commit')
+        self.logger.debug('sql commit')
 
     def output(self):
         if self._source is None:
@@ -120,7 +119,7 @@ class MysqlUpdateWriter(MysqlExecutor):
         for item in items:
             results = self.cur.execute(sql, item, multi=True)
             result = next(results)
-            logging.debug("Number of rows affected by statement '{}': {}".format(result.statement, result.rowcount))
+            self.logger.debug("Number of rows affected by statement '{}': {}".format(result.statement, result.rowcount))
             if result.rowcount == 0:
                 miss_update.append(item)
         self.db.commit()
@@ -140,6 +139,46 @@ class MysqlUpdateWriter(MysqlExecutor):
                 tmp_items = []
         if len(tmp_items) != 0:
             self._update_many(tmp_items)
+
+        self._disconnect()
+
+
+class MysqlDel(MysqlWriter):
+    def __init__(self, config: dict, table_name: str, key_field: list, buffer=100):
+        super(MysqlDel, self).__init__(config, table_name, buffer)
+        self.key_field = set(key_field)
+
+    def _output_many(self, items: List[dict]):
+        assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
+        assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
+        item_lengs = set([len(item.keys()) for item in items])
+        if len(item_lengs) > 1:
+            self.logger.warning('注意，输入的字典长度不一致。')
+        for item in items:
+            element = ['{}=%({})s'.format(item_key, item_key) for item_key in item.keys()]
+            field_names = ' and '.join(element)
+            sql = 'delete from {} where {}'.format(self.table_name, field_names)
+            results = self.cur.execute(sql, item, multi=True)
+            result = next(results)
+            self.logger.debug("Number of rows affected by statement '{}': {}".format(result.statement, result.rowcount))
+        self.db.commit()
+        self.logger.debug('sql commit')
+
+    def output(self):
+        if self._source is None:
+            raise IOError('未指定来源')
+        self._connect()
+
+        tmp_items = []
+        for item in self._source:
+            if len(self.key_field - set(item.keys())) > 0:
+                self.logger.warning('删除对象不对应primary key，可能删除多条。')
+            tmp_items.append(copy.deepcopy(item))
+            if len(tmp_items) >= self.buffer:
+                self._output_many(tmp_items)
+                tmp_items = []
+        if len(tmp_items) != 0:
+            self._output_many(tmp_items)
 
         self._disconnect()
 
