@@ -16,29 +16,32 @@ class CsvWriter(Executor):
         super().__init__()
         self.stream = open(fpath, 'w')
         self.writer = csv.DictWriter(self.stream, fieldnames=fieldnames, delimiter=kwargs.get('delimiter', ','))
-        self.writer.writeheader()
+        if kwargs.get('write_header', True):
+            self.writer.writeheader()
 
     def output(self):
         if self._source is None:
             raise IOError('未指定来源')
         for item in self._source:
+            self.counter['total'] += 1
             self.writer.writerow(item)
         self.stream.close()
 
     def writerow(self, row: dict):
         assert isinstance(row, dict), '输入必须是字典。'
         self.writer.writerow(row)
+        self.counter['total'] += 1
 
 
 class MysqlWriter(MysqlExecutor):
-    def __init__(self, config: dict, table_name: str, buffer=100):
+    def __init__(self, config: dict, table_name: str, buffer=100, **kwargs):
         """
         向一个mysql表写入数据。
         :param config: 数据库配置
         :param table_name: 表名称
         :param buffer: 多少条数据commit一次。
         """
-        super().__init__(config)
+        super().__init__(config, **kwargs)
         self.table_name = table_name
         self.buffer = buffer
 
@@ -54,7 +57,7 @@ class MysqlWriter(MysqlExecutor):
             sql = 'insert into {} ({}) values (%({})s)'.format(self.table_name, field_names, field_values)
             self.cur.execute(sql, item)
         self.db.commit()
-        self.logger.debug('sql commit')
+        self.counter['total'] += len(items)
 
     def output(self):
         if self._source is None:
@@ -83,7 +86,7 @@ class MysqlWriter(MysqlExecutor):
 
 
 class MysqlUpdateWriter(MysqlExecutor):
-    def __init__(self, config: dict, table_name: str, primary_keys: list, buffer=100, write_fail=False):
+    def __init__(self, config: dict, table_name: str, primary_keys: list, buffer=100, write_fail=False, **kwargs):
         """
         更新数据库字段。
         :param config: 数据库配置文件
@@ -92,7 +95,7 @@ class MysqlUpdateWriter(MysqlExecutor):
         :param buffer: 缓存多少才commit
         :param write_fail: 更新失败的是否写到数据库里。
         """
-        super().__init__(config)
+        super().__init__(config, **kwargs)
         self.table_name = table_name
         self.buffer = buffer
         self.primary_keys = primary_keys
@@ -107,6 +110,7 @@ class MysqlUpdateWriter(MysqlExecutor):
         for item in items:
             self.cur.execute(sql, item)
         self.db.commit()
+        self.counter['write'] += len(items)
 
     def _update_many(self, items: list):
         assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
@@ -123,6 +127,8 @@ class MysqlUpdateWriter(MysqlExecutor):
             if result.rowcount == 0:
                 miss_update.append(item)
         self.db.commit()
+        self.counter['update'] += (len(items) - len(miss_update))
+
         if self.write_fail and len(miss_update) > 0:
             self._output_many(miss_update)
 
@@ -144,8 +150,8 @@ class MysqlUpdateWriter(MysqlExecutor):
 
 
 class MysqlDel(MysqlWriter):
-    def __init__(self, config: dict, table_name: str, key_field: list, buffer=100):
-        super(MysqlDel, self).__init__(config, table_name, buffer)
+    def __init__(self, config: dict, table_name: str, key_field: list, buffer=100, **kwargs):
+        super(MysqlDel, self).__init__(config, table_name, buffer, **kwargs)
         self.key_field = set(key_field)
 
     def _output_many(self, items: List[dict]):
@@ -161,8 +167,8 @@ class MysqlDel(MysqlWriter):
             results = self.cur.execute(sql, item, multi=True)
             result = next(results)
             self.logger.debug("Number of rows affected by statement '{}': {}".format(result.statement, result.rowcount))
+            self.counter['total'] += result.rowcount
         self.db.commit()
-        self.logger.debug('sql commit')
 
     def output(self):
         if self._source is None:
@@ -172,7 +178,8 @@ class MysqlDel(MysqlWriter):
         tmp_items = []
         for item in self._source:
             if len(self.key_field - set(item.keys())) > 0:
-                self.logger.warning('删除对象不对应primary key，可能删除多条。')
+                raise ValueError('删除对象不对应设定的key field，可能删除多条。')
+            item = {key: value for key, value in item.items() if key in self.key_field}
             tmp_items.append(copy.deepcopy(item))
             if len(tmp_items) >= self.buffer:
                 self._output_many(tmp_items)

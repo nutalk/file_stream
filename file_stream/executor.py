@@ -2,6 +2,7 @@
 import mysql.connector
 from retry import retry
 import logging
+from collections import defaultdict
 
 
 class Executor(object):
@@ -12,6 +13,7 @@ class Executor(object):
         self.name = name or ('%s-%s' % (self.__class__.__name__, id(self)))
         self._source = None
         self._output = None
+        self.counter = defaultdict(int)
         if kwargs.get('logger') is not None:
             self.logger = kwargs.get('logger')
         else:
@@ -30,6 +32,7 @@ class Executor(object):
         :param item:
         :return:
         """
+        self.counter['total'] += 1
         return item
 
     def __or__(self, executor):
@@ -49,12 +52,12 @@ class Executor(object):
 
 
 class MysqlExecutor(Executor):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, **kwargs):
         """
         向一个mysql表读取或写入数据的基础类。
         :param config: 数据库配置
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.config = config
         self.db = None
         self.cur = None

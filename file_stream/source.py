@@ -14,6 +14,7 @@ class Dir(Executor):
         self.dir = dir
         self.allowed_suffix = allowed_suffix
         self.files = self.__get_files(dir, allowed_suffix)
+        self._source = self.files
 
     def __get_files(self, root_path, file_suffix: list = None):
         container = []
@@ -34,10 +35,6 @@ class Dir(Executor):
                         continue
         return container
 
-    def __iter__(self, path_root=None):
-        for item in self.files:
-            yield item
-
 
 class CsvReader(Executor):
     def __init__(self, path=None, **kwargs):
@@ -47,7 +44,7 @@ class CsvReader(Executor):
         :param delimiter: 分隔符。
         :param encoding: 文件编码。
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.path = path
         self.delimiter = kwargs.get('delimiter', ',')
         self.encoding = kwargs.get('encoding', 'utf8')
@@ -60,7 +57,6 @@ class CsvReader(Executor):
 
     @property
     def fieldnames(self):
-        # TODO 优化来源测试，既能避免未指定来源，又能避免每次迭代都测试，以提高速度。
         self.test_source()
         if self._source is not None:
             for fpath in self._source:
@@ -79,36 +75,34 @@ class CsvReader(Executor):
                 with open(fpath, 'r', encoding=self.encoding) as f:
                     reader = csv.DictReader(f, delimiter=self.delimiter)
                     for row in reader:
+                        self.counter['total'] += 1
                         yield row
         if self.path is not None:
             with open(self.path, 'r', encoding=self.encoding) as f:
                 reader = csv.DictReader(f, delimiter=self.delimiter)
                 for row in reader:
+                    self.counter['total'] += 1
                     yield row
 
 
 class Memory(Executor):
-    def __init__(self, items):
+    def __init__(self, items, **kwargs):
         """
         从内存产生数据。
         :param items: 可迭代对象。
         """
-        super().__init__()
-        self.items = items
-
-    def __iter__(self):
-        for item in self.items:
-            yield item
+        super().__init__(**kwargs)
+        self._source = items
 
 
 class MysqlReader(MysqlExecutor):
-    def __init__(self, config: dict, sql: str):
+    def __init__(self, config: dict, sql: str, **kwargs):
         """
         从mysql读取数据。
         :param config: 数据库配置。
         :param sql: sql语句。
         """
-        super().__init__(config)
+        super().__init__(config, **kwargs)
         self.sql = sql
 
     def __iter__(self):
@@ -116,6 +110,7 @@ class MysqlReader(MysqlExecutor):
 
         self.cur.execute(self.sql)
         for item in self.cur:
+            self.counter['total'] += 1
             yield item
 
         self._disconnect()
@@ -123,7 +118,7 @@ class MysqlReader(MysqlExecutor):
 
 class LineReader(Executor):
     def __init__(self, fpath, **kwargs):
-        super().__init__()
+        super().__init__(**kwargs)
         self.path = fpath
         self.encoding = kwargs.get('encoding', 'utf8')
 
@@ -139,8 +134,10 @@ class LineReader(Executor):
             for fpath in self._source:
                 with open(fpath, 'r', encoding=self.encoding) as f:
                     for row in f:
+                        self.counter['total'] += 1
                         yield row
         if self.path is not None:
             with open(self.path, 'r', encoding=self.encoding) as f:
                 for row in f:
+                    self.counter['total'] += 1
                     yield row

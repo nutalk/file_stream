@@ -25,8 +25,10 @@ class Filter(Executor):
 
     def handle(self, item):
         if self.filter.result(item):
+            self.counter['pass'] += 1
             return item
         else:
+            self.counter['block'] += 1
             return None
 
 
@@ -80,9 +82,11 @@ class FinishedRemove(Executor):
         if handler in self.exists:
             self.logger.debug('pass data, {}.'.format(item))
             self.finished += 1
+            self.counter['finished'] += 1
             return None
         else:
             self.logger.debug('dealing with, {}.'.format(item))
+            self.counter['new'] += 1
             return item
 
 
@@ -102,8 +106,10 @@ class DuplicateRemove(Executor):
         handler = tuple([item[field].replace('\n', '') for field in self.tell_fields])
         if handler in self.exists:
             self.logger.debug('find duplicate data, {}.'.format(item))
+            self.counter['duplicate'] += 1
             return None
         else:
+            self.counter['new'] += 1
             return item
 
     def __iter__(self):
@@ -127,6 +133,7 @@ class FieldTrans(Executor):
         self.keep_miss_key = keep_miss_key
 
     def handle(self, item):
+        self.counter['total'] += 1
         out_row = {}
         if self.keep_miss_key:
             out_row.update(item)
@@ -185,8 +192,10 @@ class DataQC(Executor):
             single_result = any(result)
 
         if single_result:
+            self.counter['pass'] += 1
             return item
         else:
+            self.counter['fix'] += 1
             return self.corrective_action(item)
 
     @property
@@ -195,8 +204,8 @@ class DataQC(Executor):
 
 
 class NoneFiller(Executor):
-    def __init__(self, fieldnames, fill_with=None):
-        super().__init__()
+    def __init__(self, fieldnames, fill_with=None, **kwargs):
+        super().__init__(**kwargs)
         self.fieldnames = fieldnames
         self.fill_with = fill_with
 
