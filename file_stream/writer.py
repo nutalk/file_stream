@@ -1,8 +1,8 @@
 from file_stream.executor import Executor, MysqlExecutor
 import csv
-import logging
 import copy
-from typing import List
+from typing import List, Dict
+import redis
 
 
 class CsvWriter(Executor):
@@ -205,3 +205,16 @@ class ScreenOutput(Executor):
 
     def writerow(self, row: dict):
         print(row, end=self.end)
+
+
+class RedisWriter(Executor):
+    def __init__(self, redis_config: dict, **kwargs):
+        super().__init__(**kwargs)
+        self.writer = redis.Redis(**redis_config)
+
+    def add_value(self, item: dict):
+        for key, value in item.items():
+            self.writer.append(key, value)
+
+
+

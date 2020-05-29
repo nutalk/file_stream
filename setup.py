@@ -4,7 +4,7 @@ with open("readme.rst", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 setup(
     name="file_stream",
-    version="0.1.6",
+    version="0.1.7",
     author="Nutalk",
     author_email="ht2005112@hotmail.com",
     description="process data as stream.",
@@ -15,7 +15,9 @@ setup(
     long_description=long_description,
     install_requires=[
         'mysql-connector-python',
-        'retry'
+        'retry',
+        'kafka',
+        'redis'
             ],
     classifiers=[
         "Development Status :: 3 - Alpha",
