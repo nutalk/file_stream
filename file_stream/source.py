@@ -152,7 +152,7 @@ class KafkaReader(Executor):
         self.consumer.subscribe([topic])
         self.timeout = timeout
 
-    def __iter__(self):
+    def __iter__(self) -> dict:
         while True:
             msg = self.consumer.poll(self.timeout)
             if not msg:
@@ -162,4 +162,4 @@ class KafkaReader(Executor):
                 self.logger.exception("Consumer error: {}".format(msg.error()))
                 continue
             message = json.loads(msg.value())
-            yield json.loads(message)
+            yield message

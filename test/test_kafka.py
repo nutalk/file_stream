@@ -26,7 +26,7 @@ TOPIC = os.environ.get('TOPIC', 'demo.crawled_interaction_crawler')
 def kafka_test():
     reader = KafkaReader(kafka_config, TOPIC)
     for item in reader:
-        print(item)
+        print(item['appid'])
         break
 
 
