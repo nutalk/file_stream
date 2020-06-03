@@ -19,18 +19,17 @@ class Executor(object):
         else:
             self.logger = logging.getLogger(__name__)
         self.kwargs = kwargs
-        self.args = None
         self.routine = self._co()
         next(self.routine)
 
     def _co(self):
         while True:
-            self.args = yield
-            ret = self.handle(self.args)
+            item = yield
+            item = self.handle(item)
             if self._output is not None:
-                self._output.routine.send(ret)
+                self._output.routine.send(item)
             else:
-                self.sink(ret)
+                self.sink(item)
 
     def sink(self, item):
         """
@@ -42,7 +41,7 @@ class Executor(object):
 
     def run(self):
         """
-        启动协程
+        启动协程，向下游推送数据。
         :return:
         """
         for item in self:
