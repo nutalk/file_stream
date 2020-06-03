@@ -19,6 +19,34 @@ class Executor(object):
         else:
             self.logger = logging.getLogger(__name__)
         self.kwargs = kwargs
+        self.args = None
+        self.routine = self._co()
+        next(self.routine)
+
+    def _co(self):
+        while True:
+            self.args = yield
+            ret = self.handle(self.args)
+            if self._output is not None:
+                self._output.routine.send(ret)
+            else:
+                self.sink(ret)
+
+    def sink(self, item):
+        """
+        在没有下游协程的情况下，处理数据
+        :param item:
+        :return:
+        """
+        print(item)
+
+    def run(self):
+        """
+        启动协程
+        :return:
+        """
+        for item in self:
+            self._output.routine.send(item)
 
     def __iter__(self):
         for item in self._source:
@@ -37,7 +65,9 @@ class Executor(object):
 
     def __or__(self, executor):
         """or操作，将self放到executor的最左边，同时返回最右边的executor对象。"""
-        source = executor             # type: Executor
+        if not isinstance(executor, Executor):
+            raise RuntimeError('下级不是Executor或者子类。')
+        source = executor
         while source._source:
             source = source._source
         source._source = self

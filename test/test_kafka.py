@@ -12,6 +12,7 @@ import sys
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
+from pprint import pprint
 
 
 from file_stream.source import KafkaReader
@@ -26,15 +27,16 @@ TOPIC = os.environ.get('TOPIC', 'demo.crawled_interaction_crawler')
 def kafka_test():
     reader = KafkaReader(kafka_config, TOPIC)
     for item in reader:
-        print(item['appid'])
-        break
+        pprint(item)
+        _ = input()
 
 
 def redis_test():
     r = RedisWriter(redis_config)
-    r.add_value({'name_f': 'test_name'})
-    out = r.writer.get('name_f')
-    print(out)
+    cninfo_platrorm_name = 'cninfo'
+    print(cninfo_platrorm_name)
+    out = r.writer.get('interaction_{}_reply_ids'.format(cninfo_platrorm_name))
+    pprint(out)
 
 
 if __name__ == '__main__':
