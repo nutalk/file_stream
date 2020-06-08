@@ -6,13 +6,13 @@ from confluent_kafka import Consumer
 
 
 class Dir(Executor):
-    def __init__(self, dir: str, allowed_suffix: list = None):
+    def __init__(self, dir: str, allowed_suffix: list = None, **kwargs):
         """
         获取目录下的所有文件的绝对地址。
         :param dir: 目录地址。
         :param allowed_suffix: 允许的后缀，None的情况下返回全部。
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.dir = dir
         self.allowed_suffix = allowed_suffix
         self.files = self.__get_files(dir, allowed_suffix)
