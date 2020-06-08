@@ -28,6 +28,8 @@ class Executor(object):
         while True:
             item = yield
             item = self.handle(item)
+            if item is None:
+                continue
             if self._output is not None:
                 self._output.routine.send(item)
             else:
