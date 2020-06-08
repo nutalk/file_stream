@@ -3,6 +3,7 @@ import mysql.connector
 from retry import retry
 import logging
 from collections import defaultdict
+from tqdm import tqdm
 
 
 class Executor(object):
@@ -14,6 +15,7 @@ class Executor(object):
         self._source = None
         self._output = None
         self.counter = defaultdict(int)
+        self.show_process = kwargs.get('show_process')
         if kwargs.get('logger') is not None:
             self.logger = kwargs.get('logger')
         else:
@@ -48,10 +50,16 @@ class Executor(object):
             self._output.routine.send(item)
 
     def __iter__(self):
-        for item in self._source:
-            result = self.handle(item)
-            if result is not None:
-                yield result
+        if self.show_process:
+            for item in tqdm(self._source):
+                result = self.handle(item)
+                if result is not None:
+                    yield result
+        else:
+            for item in self._source:
+                result = self.handle(item)
+                if result is not None:
+                    yield result
 
     def handle(self, item):
         """
