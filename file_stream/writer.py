@@ -44,6 +44,7 @@ class MysqlWriter(MysqlExecutor):
         super().__init__(config, **kwargs)
         self.table_name = table_name
         self.buffer = buffer
+        self.tmp_item = []
 
     def _output_many(self, items: list):
         assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
@@ -74,6 +75,9 @@ class MysqlWriter(MysqlExecutor):
             self._output_many(tmp_items)
 
         self._disconnect()
+
+    def sink(self, item: dict):
+        self._output_many([item])
 
     def writerows(self, rows: List[dict]):
         self._connect()
