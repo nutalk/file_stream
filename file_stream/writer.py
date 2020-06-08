@@ -14,7 +14,7 @@ class CsvWriter(Executor):
         :param delimiter: 分隔符。
         """
         super().__init__()
-        self.stream = open(fpath, 'w')
+        self.stream = open(fpath, 'w', newline=kwargs.get('newline', ''))
         self.writer = csv.DictWriter(self.stream, fieldnames=fieldnames, delimiter=kwargs.get('delimiter', ','))
         if kwargs.get('write_header', True):
             self.writer.writeheader()
