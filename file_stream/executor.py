@@ -20,9 +20,11 @@ class Executor(object):
             self.logger = kwargs.get('logger')
         else:
             self.logger = logging.getLogger(__name__)
+        self.ncols = kwargs.get('ncols', 100)
         self.kwargs = kwargs
         self.routine = self._co()
         next(self.routine)
+
 
     def _co(self):
         while True:
@@ -41,7 +43,7 @@ class Executor(object):
         :param item:
         :return:
         """
-        print(item)
+        raise NotImplementedError('需要先实现')
 
     def run(self):
         """
@@ -53,7 +55,7 @@ class Executor(object):
 
     def __iter__(self):
         if self.show_process:
-            for item in tqdm(self._source):
+            for item in tqdm(self._source, desc=self.name, ncols=self.ncols):
                 result = self.handle(item)
                 if result is not None:
                     yield result

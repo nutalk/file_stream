@@ -27,6 +27,9 @@ class CsvWriter(Executor):
             self.writer.writerow(item)
         self.stream.close()
 
+    def sink(self, item: dict):
+        self.writerow(item)
+
     def writerow(self, row: dict):
         assert isinstance(row, dict), '输入必须是字典。'
         self.writer.writerow(row)
@@ -206,6 +209,9 @@ class ScreenOutput(Executor):
 
         for item in self._source:
             print(item, end=self.end)
+
+    def sink(self, item):
+        self.writerow(item)
 
     def writerow(self, row: dict):
         print(row, end=self.end)
