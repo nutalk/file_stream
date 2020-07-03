@@ -3,6 +3,8 @@ import csv
 from file_stream.executor import Executor, MysqlExecutor
 import json
 from confluent_kafka import Consumer
+from file_stream.utils import split_list
+from tqdm import tqdm
 
 
 class Dir(Executor):
@@ -116,6 +118,40 @@ class MysqlReader(MysqlExecutor):
             yield item
 
         self._disconnect()
+
+
+class MysqlBarchReader(MysqlExecutor):
+    def __init__(self, config: dict, target: Executor, target_key: str, sql: str,
+                 batch_size: int = 10000, **kwargs):
+        """
+        按batch获取mysql中的数据，避免长时间连接。
+        :param config: 数据库配置。
+        :param target: 获取全部pk的对象。
+        :param target_key: pk值所在字典的key。
+        :param sql: 获取数据的sql语句。
+        :param batch_size: batch大小，默认为10000。
+        :param show_process: 显示进度条。
+        :param kwargs: 其他参数，如logger等。
+        """
+        super().__init__(config, **kwargs)
+        self.targets = []
+        for item in target:
+            self.targets.append(item[target_key])
+        self.targets = split_list(self.targets, batch_size)
+        self.sql = sql
+        self.target_key = target_key
+
+    def __iter__(self):
+        for keys in self.targets:
+            self._connect()
+            keys_str = "','".join(keys)
+            sql = f"{self.sql} where {self.target_key} in ('{keys_str}')"
+            self.cur.execute(sql)
+            datas = self.cur.fatch_all()
+            for data in tqdm(datas, desc=self.name, ncols=self.ncols):
+                self.counter['total'] += 1
+                yield data
+            self._disconnect()
 
 
 class LineReader(Executor):

@@ -25,7 +25,6 @@ class Executor(object):
         self.routine = self._co()
         next(self.routine)
 
-
     def _co(self):
         while True:
             item = yield
