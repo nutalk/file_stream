@@ -2,6 +2,7 @@ import re
 import math
 from typing import List
 import hashlib
+import logging
 
 
 DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
@@ -51,3 +52,27 @@ def get_md5_value(src: str) -> str:
     myd5.update(src.encode("utf8"))
     myd5digest = myd5.hexdigest()
     return myd5digest
+
+
+def init_logger(name: str = None, file_output_path: str = None, mode: str = 'a'):
+    """
+    初始化logger
+    :param name:
+    :param file_output_path:
+    :param mode:
+    :return:
+    """
+    if name is None:
+        logger = logging.getLogger(__name__)
+    else:
+        logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    if file_output_path:
+        fh = logging.FileHandler(file_output_path, mode=mode)
+    else:
+        fh = logging.StreamHandler()
+    fh.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s %(name)s:%(levelname)s:%(message)s")
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    return logger
