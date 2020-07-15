@@ -76,3 +76,14 @@ def init_logger(name: str = None, file_output_path: str = None, mode: str = 'a')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     return logger
+
+
+def get_sql(fpath: str) -> str:
+    """
+    读取sql文件中的sql命令。
+    :param fpath:
+    :return:
+    """
+    with open(fpath, 'r') as sqlf:
+        sql = sqlf.read()
+    return sql.strip()
