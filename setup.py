@@ -17,7 +17,8 @@ setup(
         'mysql-connector-python',
         'retry',
         'confluent-kafka',
-        'redis'
+        'redis',
+        'tqdm'
             ],
     classifiers=[
         "Development Status :: 3 - Alpha",

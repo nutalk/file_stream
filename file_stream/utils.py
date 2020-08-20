@@ -87,3 +87,18 @@ def get_sql(fpath: str) -> str:
     with open(fpath, 'r') as sqlf:
         sql = sqlf.read()
     return sql.strip()
+
+
+def update_object(object, info_dict: dict):
+    """
+    用字典更新类
+    :param object:
+    :param info_dict:
+    :return:
+    """
+    for key in info_dict.keys():
+        if hasattr(object, key):
+            setattr(object, key, info_dict[key])
+        else:
+            logging.debug(f'遇到没有的键:{key}')
+    return object

@@ -3,6 +3,7 @@ import csv
 import copy
 from typing import List, Dict
 import redis
+import json
 
 
 class CsvWriter(Executor):
@@ -226,5 +227,33 @@ class RedisWriter(Executor):
         for key, value in item.items():
             self.writer.append(key, value)
 
+
+class JsonWriter(Executor):
+    def __init__(self, fpath: str, **kwargs):
+        """
+        写json到文件。
+        :param fpath: 目标地址。
+        """
+        super().__init__()
+        self.stream = open(fpath, 'w', newline=kwargs.get('newline', ''))
+
+    def output(self):
+        if self._source is None:
+            raise IOError('未指定来源')
+        for item in self._source:
+            item.pop('md_id')
+            self.counter['total'] += 1
+            self.stream.write(json.dumps(item, ensure_ascii=False))
+            self.stream.write('\n')
+        self.stream.close()
+
+    def sink(self, item: dict):
+        self.writerow(item)
+
+    def writerow(self, row: dict):
+        assert isinstance(row, dict), '输入必须是字典。'
+        self.stream.write(json.dumps(row, ensure_ascii=False))
+        self.stream.write('\n')
+        self.counter['total'] += 1
 
 
