@@ -180,22 +180,3 @@ class LineReader(Executor):
                     self.counter['total'] += 1
                     yield row
 
-
-class KafkaReader(Executor):
-    def __init__(self, kafka_config, topic, timeout: int = 10, **kwargs):
-        super().__init__(**kwargs)
-        self.consumer = Consumer(kafka_config)
-        self.consumer.subscribe([topic])
-        self.timeout = timeout
-
-    def __iter__(self) -> dict:
-        while True:
-            msg = self.consumer.poll(self.timeout)
-            if not msg:
-                self.logger.debug('No message from kafka')
-                continue
-            if msg.error():
-                self.logger.exception("Consumer error: {}".format(msg.error()))
-                continue
-            message = json.loads(msg.value())
-            yield message

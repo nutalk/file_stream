@@ -16,8 +16,6 @@ setup(
     install_requires=[
         'mysql-connector-python',
         'retry',
-        'confluent-kafka',
-        'redis',
         'tqdm'
             ],
     classifiers=[
