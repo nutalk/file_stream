@@ -92,47 +92,6 @@ class MysqlWriter(MysqlExecutor):
         self._output_many(rows)
 
 
-class MysqlDel(MysqlWriter):
-    def __init__(self, config: dict, table_name: str, key_field: list, buffer=100, **kwargs):
-        super(MysqlDel, self).__init__(config, table_name, buffer, **kwargs)
-        self.key_field = set(key_field)
-
-    def _output_many(self, items: List[dict]):
-        assert isinstance(items, list) and len(items) > 0, '输入只能是list,且长度大于0。'
-        assert isinstance(items[0], dict), '元素只能是字典，且字典與数据库列表对应。'
-        item_lengs = set([len(item.keys()) for item in items])
-        if len(item_lengs) > 1:
-            self.logger.warning('注意，输入的字典长度不一致。')
-        for item in items:
-            element = ['{}=%({})s'.format(item_key, item_key) for item_key in item.keys()]
-            field_names = ' and '.join(element)
-            sql = 'delete from {} where {}'.format(self.table_name, field_names)
-            results = self.cur.execute(sql, item, multi=True)
-            result = next(results)
-            self.logger.debug("Number of rows affected by statement '{}': {}".format(result.statement, result.rowcount))
-            self.counter['total'] += result.rowcount
-        self.db.commit()
-
-    def output(self):
-        if self._source is None:
-            raise IOError('未指定来源')
-        self._connect()
-
-        tmp_items = []
-        for item in self._source:
-            if len(self.key_field - set(item.keys())) > 0:
-                raise ValueError('删除对象不对应设定的key field，可能删除多条。')
-            item = {key: value for key, value in item.items() if key in self.key_field}
-            tmp_items.append(copy.deepcopy(item))
-            if len(tmp_items) >= self.buffer:
-                self._output_many(tmp_items)
-                tmp_items = []
-        if len(tmp_items) != 0:
-            self._output_many(tmp_items)
-
-        self._disconnect()
-
-
 class ScreenOutput(Executor):
     def __init__(self, end='\n'):
         """在屏幕打印出输出结果。"""
