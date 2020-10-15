@@ -1,9 +1,5 @@
-
-import mysql.connector
-from retry import retry
 import logging
 from collections import defaultdict
-from tqdm import tqdm
 
 
 class Executor(object):
@@ -15,12 +11,11 @@ class Executor(object):
         self._source = None
         self._output = None
         self.counter = defaultdict(int)
-        self.show_process = kwargs.get('show_process')
         if kwargs.get('logger') is not None:
             self.logger = kwargs.get('logger')
         else:
             self.logger = logging.getLogger(__name__)
-        self.ncols = kwargs.get('ncols', 100)
+        self.length = kwargs.get('length', 100)
         self.kwargs = kwargs
         self.routine = self._co()
         next(self.routine)
@@ -53,16 +48,10 @@ class Executor(object):
             self._output.routine.send(item)
 
     def __iter__(self):
-        if self.show_process:
-            for item in tqdm(self._source, desc=self.name, ncols=self.ncols):
-                result = self.handle(item)
-                if result is not None:
-                    yield result
-        else:
-            for item in self._source:
-                result = self.handle(item)
-                if result is not None:
-                    yield result
+        for item in self._source:
+            result = self.handle(item)
+            if result is not None:
+                yield result
 
     def handle(self, item):
         """
@@ -90,30 +79,9 @@ class Executor(object):
             raise Exception('Lack of data source!')
         return self._source
 
+    def __len__(self):
+        if self._source:
+            return len(self._source)
+        else:
+            return self.length
 
-class MysqlExecutor(Executor):
-    def __init__(self, config: dict, **kwargs):
-        """
-        向一个mysql表读取或写入数据的基础类。
-        :param config: 数据库配置
-        """
-        super().__init__(**kwargs)
-        self.config = config
-        self.db = None
-        self.cur = None
-
-    @retry(tries=3, delay=1)
-    def _connect(self, dictionary=True):
-        self.db = mysql.connector.connect(**self.config)
-        self.cur = self.db.cursor(dictionary=dictionary)
-
-    def connect(self, dictionary=True):
-        self._connect(dictionary)
-
-    @retry(tries=3, delay=1)
-    def _disconnect(self):
-        self.cur.close()
-        self.db.close()
-
-    def disconnect(self):
-        self._disconnect()

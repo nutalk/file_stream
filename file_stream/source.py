@@ -1,12 +1,13 @@
 import os
 import csv
-from file_stream.executor import Executor, MysqlExecutor
+from file_stream.executor import Executor
 
 
 class Dir(Executor):
     def __init__(self, dir: str, allowed_suffix: list = None, **kwargs):
         """
         获取目录下的所有文件的绝对地址。
+        TODO 可以用pathlib.Path替换掉。
         :param dir: 目录地址。
         :param allowed_suffix: 允许的后缀，None的情况下返回全部。
         """
@@ -93,27 +94,6 @@ class Memory(Executor):
         """
         super().__init__(**kwargs)
         self._source = items
-
-
-class MysqlReader(MysqlExecutor):
-    def __init__(self, config: dict, sql: str, **kwargs):
-        """
-        从mysql读取数据。
-        :param config: 数据库配置。
-        :param sql: sql语句。
-        """
-        super().__init__(config, **kwargs)
-        self.sql = sql
-
-    def __iter__(self):
-        self._connect()
-
-        self.cur.execute(self.sql)
-        for item in self.cur:
-            self.counter['total'] += 1
-            yield item
-
-        self._disconnect()
 
 
 class LineReader(Executor):
