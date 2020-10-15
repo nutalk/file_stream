@@ -13,11 +13,7 @@ setup(
     url="https://github.com/nutalk/file_stream",
     packages=find_packages(),
     long_description=long_description,
-    install_requires=[
-        'mysql-connector-python',
-        'retry',
-        'tqdm'
-            ],
+    install_requires=[],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",

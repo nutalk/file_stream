@@ -2,13 +2,13 @@
 流式处理数据
 =============
 
-从目录读取所有文件，从csv读取所有数据，从mysql读取数据。
+利用生成器、协程等流式处理数据。
 
-对数据按多个函数的组合进行过滤、去重， 对数据列进行转换，对数据进行计算。
+对数据按多个函数的组合进行过滤、去重，对数据列进行转换，对数据进行计算。
 
 对数据进行质量控制（QC）检查，确保最后的数据与预期相符。
 
-将数据写入csv、数据库等。
+将数据写入csv等。
 
 原理和特点说明
 ====================
@@ -20,7 +20,7 @@
 特点：
     - 高拓展性。
     - 低内存占用。
-    - 丰富的代码注释与样例。
+    - 近依赖python基础包。
 
 
 参考项目
@@ -35,28 +35,6 @@
 
 使用
 ========
-写数据到数据库。
-
-::
-
-    from file_stream.source import Memory
-    from file_stream.writer import MysqlWriter
-
-    office_base_config = {
-        'host': "",
-        'user': "",
-        'passwd': '',
-        'database': '',
-        'charset': '',
-    }
-
-    datas = [{'f_cuid': 'id2', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0},
-             {'f_cuid': 'id3', 'f_sentence_no': 3, 'f_pos_no': 2, 'f_neg_no': 1, 'f_nu_no': 0},
-             {'f_cuid': 'id1', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0},
-             {'f_cuid': 'id4', 'f_sentence_no': 1, 'f_pos_no': 1, 'f_neg_no': 0, 'f_nu_no': 0}, ]
-    reader = Memory(datas)
-    p = reader | MysqlWriter(office_base_config, 't_report_info')
-    p.output()
 
 从CSV文件读取数据，按条件筛选后输出到屏幕。
 
